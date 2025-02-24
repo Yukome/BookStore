@@ -32,7 +32,7 @@ def reg(examination):
     if examination not in examination_number:
         raise CustomError("\nНеверный код сотрудника!")
 
-def registration(log_and_pass_list_u,log_and_pass_list_m, examination_number):
+def registration(log_and_pass_list_u,log_and_pass_list_m, examination_number, list_of_books):
     global manager_or_user
     alphabet = set('абвгдеёжзийклмнопрстуфхцчшщъыьэюя')
     print("=====================================================")
@@ -88,7 +88,7 @@ def registration(log_and_pass_list_u,log_and_pass_list_m, examination_number):
         for i in log_and_pass_list_m:
             if i == index1:
                 index1 = log_and_pass_list_m.index(i)
-        return index1
+        Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number)
     elif manager_or_user == 2:
         log_and_pass_list_u.append({
             'login': login,
@@ -100,9 +100,9 @@ def registration(log_and_pass_list_u,log_and_pass_list_m, examination_number):
         for i in log_and_pass_list_u:
             if i == index1:
                 index1 = log_and_pass_list_u.index(i)
-        return index1
+        User(log_and_pass_list_u, index1, list_of_books)
 
-def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, index1):
+def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, index1, list_of_books):
     global manager_or_user, examination
     print("=====================================================")
     print("\n====Войдите в систему====")
@@ -162,7 +162,7 @@ def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, index1
             for i in log_and_pass_list_m:
                 if i == index1:
                     index1 = log_and_pass_list_m.index(i)
-            return index1
+            Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number)
         elif manager_or_user == 2:
             login = input("\nВведите логин: ")
             password = input("\nВведите пароль: ")
@@ -183,7 +183,7 @@ def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, index1
             for i in log_and_pass_list_u:
                 if i == index1:
                     index1 = log_and_pass_list_u.index(i)
-            return index1
+            User(log_and_pass_list_u, index1, list_of_books)
 
 def error_manager(choice_manager):
     if choice_manager != '0' and choice_manager != '1' and choice_manager != '2' and choice_manager != '3' and choice_manager != '4':
@@ -413,7 +413,6 @@ def Manager(log_and_pass_list_u, log_and_pass_list_m, index1, list_of_books):
           "\n2 - Добавление пользователя"
           "\n3 - Просмотр данных пользователя")
     a = True
-    a2 = True
     while a == True:
         choice_manager = input("Номер действия: ")
         if choice_manager != '0' and choice_manager != '1' and choice_manager != '2' and choice_manager != '3':
@@ -433,11 +432,13 @@ def Manager(log_and_pass_list_u, log_and_pass_list_m, index1, list_of_books):
                   "\n2 - Изменить каталог товаров"
                   "\n3 - Удалить товар"
                   "\n4 - Добавить товар")
+            a2 = True
             while a2 == True:
                 try:
                     choice_manager2 = int(input("Номер действия: "))
-                    if choice_manager2 != 1 and choice_manager != 2 and choice_manager != 3:
+                    if choice_manager2 != 1 and choice_manager2 != 2 and choice_manager2 != 3 and choice_manager2 != 4:
                         print("\nНеверный номер действия!")
+                        continue
                     a2 = False
                 except ValueError:
                     print("\nВведите номер действия, а не текст!")
@@ -570,6 +571,11 @@ def Manager(log_and_pass_list_u, log_and_pass_list_m, index1, list_of_books):
                 for i in list_of_books:
                     print(i)
                     print("---------------------------------------------------------------------------")
+            if choice_manager2 == 4:
+                for g in list_of_books:
+                    print(g)
+                    print("---------------------------------------------------------------------------")
+                add_book(list_of_books, index1, log_and_pass_list_m)
         elif choice_manager == '2':
             print("=====================================================")
             alphabet = set('абвгдеёжзийклмнопрстуфхцчшщъыьэюя')
@@ -835,7 +841,7 @@ f = 0
 def Start():
     global index1, continue_or_not
     if log_and_pass_list_u == [] and log_and_pass_list_m == []:
-        index1 = registration(log_and_pass_list_u, log_and_pass_list_m, examination_number)
+        index1 = registration(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_of_books)
         if log_and_pass_list_u == []:
             Manager(log_and_pass_list_u, log_and_pass_list_m, index1, list_of_books)
         elif log_and_pass_list_m == []:
@@ -871,11 +877,9 @@ def Start():
                     print("\nТакого действия нет!")
                 a = False
             if sign_in_or_regist == 1:
-                index1 = sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, index1)
-                User(log_and_pass_list_u, index1, list_of_books)
+                index1 = sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, index1, list_of_books)
             elif sign_in_or_regist == 2:
-                index1 = registration(log_and_pass_list_u, log_and_pass_list_m, examination_number)
-                Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number)
+                index1 = registration(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_of_books)
 
 if f == 0:
     Start()

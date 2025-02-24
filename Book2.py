@@ -1,5 +1,10 @@
 from operator import itemgetter
 
+from Managers_Actions import Managers_Actions
+from Users import Create_User, Create_Manager
+from Users_Actions import Users_Actions
+
+
 class CustomError(Exception):
     pass
 
@@ -69,22 +74,16 @@ def register_user(log_and_pass_list_u, log_and_pass_list_m, examination_number, 
         except CustomError as e:
             print(e)
 
-    user_data = {
-        'login': login,
-        'password': password,
-        'role': 'manager' if manager_or_user == 1 else 'user',
-    }
-
     if manager_or_user == 1:
-        user_data['cod'] = examination
+        user_data = Create_Manager(examination, login, password, 'manager')
         log_and_pass_list_m.append(user_data)
-        index1 = len(log_and_pass_list_m) - 1
-        Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number, list_of_books)
+        index1 = user_data.Return_ID()
+        Managers_Actions()
     else:
-        user_data['shopping cart'] = []
+        user_data = Create_User(login, password, 'user')
         log_and_pass_list_u.append(user_data)
-        index1 = len(log_and_pass_list_u) - 1
-        User(log_and_pass_list_u, index1, list_of_books)
+        index1 = user_data.Return_ID()
+        Users_Actions()
 
 def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_of_books):
     global manager_or_user, examination
@@ -121,7 +120,7 @@ def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_o
             print(e)
             return sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_of_books)
 
-        user_data = next((u for u in log_and_pass_list_m if u['login'] == login and u['password'] == password and u['cod'] == examination), None)
+        user_data = next((u for u in log_and_pass_list_m if u.login == login and u.password == password and u.cod == examination), None)
 
         try:
             if user_data is None:
@@ -130,12 +129,12 @@ def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_o
             print(e)
             return sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_of_books)
 
-        index1 = log_and_pass_list_m.index(user_data)
-        Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number, list_of_books)
+        index1 = user_data.Return_ID()
+        Managers_Actions()
         return
 
     elif manager_or_user == 2:
-        user_data = next((u for u in log_and_pass_list_u if u['login'] == login and u['password'] == password), None)
+        user_data = next((u for u in log_and_pass_list_u if u.login == login and u.password == password), None)
 
         try:
             if user_data is None:
@@ -144,8 +143,8 @@ def sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_o
             print(e)
             return sign_in(log_and_pass_list_u, log_and_pass_list_m, examination_number, list_of_books)
 
-        index1 = log_and_pass_list_u.index(user_data)
-        User(log_and_pass_list_u, index1, list_of_books)
+        index1 = user_data.Return_ID()
+        Users_Actions()
         return
 
 def error_manager(choice_manager):
@@ -168,6 +167,7 @@ def check_book(genre, book, list_of_books):
     return False
 
 def Filter(list_of_books):
+    global sorted_books
     for i in list_of_books:
         print(i)
         print("---------------------------------------------------------------------------")
@@ -305,10 +305,10 @@ def add_book(list_of_books, index1, log_and_pass_list):
                 break
 
     ind = log_and_pass_list[index1]
-    shopping_cart = ind.get('shopping cart')
+    shopping_cart = ind.shopping_cart
     if shopping_cart is None:
-        ind['shopping cart'] = []
-    shopping_cart = ind['shopping cart']
+        ind.shopping_cart = []
+    shopping_cart = ind.shopping_cart
 
     existing_book = next((item for item in shopping_cart if item[0] == book), None)
 
@@ -319,442 +319,6 @@ def add_book(list_of_books, index1, log_and_pass_list):
         shopping_cart.append([book, number_of_book, number_of_book * ind_b])
     print(f"\nКнига '{book}' успешно добавлена в корзину!")
     return shopping_cart
-
-def Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number, list_of_books):
-    alphabet = set('абвгдеёжзийклмнопрстуфхцчшщъыьэюя')
-    print(log_and_pass_list_m[index1])
-    print("=====================================================")
-    print("\nДобро пожаловать в учетную запись менеджера!")
-    print("\nВыберите действие: ")
-    print("\n0 - ВЫХОД"
-          "\n1 - Каталог товаров"
-          "\n2 - Добавление пользователя"
-          "\n3 - Просмотр данных пользователя"
-          "\n4 - Добавить товар")
-    a = True
-    while a:
-        choice_manager = input("Номер действия: ")
-        try:
-            error_manager(choice_manager)
-        except CustomError as e:
-            print(e)
-            continue
-
-        if choice_manager == '0':
-            a = False
-        elif choice_manager == '1':
-            print("=====================================================")
-            print("\nВыберите действие: ")
-            print("\n1 - Просмотреть или отфильтровать каталог товаров"
-                  "\n2 - Изменить каталог товаров"
-                  "\n3 - Удалить товар")
-            a2 = True
-            choice_manager2 = 0
-            while a2:
-                try:
-                    choice_manager2 = int(input("Номер действия: "))
-                    if not 1 <= choice_manager2 <= 3:
-                        print("\nНеверный номер действия!")
-                        continue
-                    a2 = False
-                except ValueError:
-                    print("\nВведите номер действия, а не текст!")
-
-            if choice_manager2 == 1:
-                print("\nЧто вы хотите изменить:")
-                print("\n1 - Просмотреть имеющийся каталог"
-                      "\n2 - Отфильтровать каталог")
-                a2 = True
-                ans = 0
-                while a2:
-                    try:
-                        ans = int(input("Введите номер действия: "))
-                    except ValueError:
-                        print("\nВведите номер действия, а не текст!")
-                    if ans not in (1, 2):
-                        print("\nТакого действия нет!")
-                        continue
-                    a2 = False
-                if ans == 1:
-                    for i in list_of_books:
-                        print(i)
-                        print("---------------------------------------------------------------------------")
-                elif ans == 2:
-                    Filter(list_of_books)
-
-            elif choice_manager2 == 2:
-                for i in list_of_books:
-                    print(i)
-                    print("---------------------------------------------------------------------------")
-                genre = input("\nВыберите жанр: ").strip().capitalize()
-                a2 = True
-                while a2:
-                    if not check_genre(genre, list_of_books):
-                        print("\nТакого жанра нет!")
-                        genre = input("\nВыберите жанр: ").strip().capitalize()
-                    else:
-                        a2 = False
-                book = input("\nВыберите произведение: ").strip().capitalize()
-                a2 = True
-                while a2:
-                    if not check_book(genre, book, list_of_books):
-                        print("\nТакого произведения нет!")
-                        book = input("\nВыберите произведение: ").strip().capitalize()
-                    else:
-                        a2 = False
-
-                a2 = True
-                change = 0
-                while a2:
-                    try:
-                        print("\nЧто вы хотите изменить:")
-                        print("\n1 - Автора"
-                              "\n2 - Стоимость"
-                              "\n3 - Рейтинг")
-                        change = int(input("\nВыберите действие: "))
-                    except ValueError:
-                        print("\nВведите номер действия, а не текст!")
-                    if change not in (1, 2, 3):
-                        print("\nТакого действия нет!")
-                        continue
-                    a2 = False
-
-                for genre_data in list_of_books:
-                    if genre in genre_data:
-                        books = genre_data[genre]
-                        for book_data in books:
-                            if book in book_data:
-                                if change == 1:
-                                    autor1 = input("На какого автора вы хотите заменить: ")
-                                    book_data[1] = autor1
-                                elif change == 2:
-                                    s = True
-                                    cost1 = 0
-                                    while s:
-                                        try:
-                                            cost1 = int(input("На какую стоимость вы хотите заменить: "))
-                                        except ValueError:
-                                            print("\nВведите стоимость, а не текст!")
-                                            continue
-                                        s = False
-                                    book_data[2] = cost1
-                                elif change == 3:
-                                    s = True
-                                    rating1 = float(0)
-                                    while s:
-                                        try:
-                                            rating1 = float(input("На какой рейтинг вы хотите заменить: "))
-                                        except ValueError:
-                                            print("\nВведите рейтинг с плавающей точкой, а не текст!")
-                                            continue
-                                        s = False
-                                    book_data[3] = rating1
-                                break
-                        break
-
-                for i in list_of_books:
-                    print(i)
-                    print("---------------------------------------------------------------------------")
-
-            elif choice_manager2 == 3:
-                for i in list_of_books:
-                    print(i)
-                    print("---------------------------------------------------------------------------")
-                genre = input("\nВыберите жанр: ").strip().capitalize()
-                a2 = True
-                while a2:
-                    if not check_genre(genre, list_of_books):
-                        print("\nТакого жанра нет!")
-                        genre = input("\nВыберите жанр: ").strip().capitalize()
-                    else:
-                        a2 = False
-
-                book = input("\nВыберите произведение: ").strip().capitalize()
-                a2 = True
-                while a2:
-                    if not check_book(genre, book, list_of_books):
-                        print("\nТакого произведения нет!")
-                        book = input("\nВыберите произведение: ").strip().capitalize()
-                    else:
-                        a2 = False
-                for genre_data in list_of_books:
-                    if genre in genre_data:
-                        books = genre_data[genre]
-                        for i in books:
-                            if i[0] == book:
-                                books.remove(i)
-                                break
-                        break
-
-                for i in list_of_books:
-                    print(i)
-                    print("---------------------------------------------------------------------------")
-
-        elif choice_manager == '2':
-            a2 = True
-            login = ""
-            password = ""
-            while a2:
-                try:
-                    login = input("\nВведите логин (не менее 4 символов): ")
-                    password = input("\nВведите пароль (не менее 4 символов): ")
-                    error_log_pass(login, password, alphabet)
-                    a2 = False
-                except CustomError as e:
-                    print(e)
-
-            user_data = {'login': login, 'password': password, 'role': 'user', 'shopping cart': []}
-
-            log_and_pass_list_u.append(user_data)
-            index1 = len(log_and_pass_list_u) - 1
-
-            print("\nВы добавили нового пользователя!")
-            print(f"Данные пользователя: {log_and_pass_list_u[-1]}")
-
-        elif choice_manager == '3':
-            def error_login(login, log_and_pass_list):
-                if not any(u['login'] == login for u in log_and_pass_list):
-                    raise CustomError("Неверный логин!")
-
-            a2 = True
-            login_user = ""
-            while a2:
-                try:
-                    login_user = input("Введите логин пользователя, которого вы хотите просмотреть: ")
-                    error_login(login_user, log_and_pass_list_u)
-                    a2 = False
-                except CustomError as e:
-                    print(e)
-
-            for user_data in log_and_pass_list_u:
-                if user_data['login'] == login_user:
-                    print(user_data)
-                    break
-        elif choice_manager == '4':
-            for i in list_of_books:
-                print(i)
-                print("---------------------------------------------------------------------------")
-            genre = input("\nВыберите жанр: ").strip().capitalize()
-            a2 = True
-            while a2:
-                if not check_genre(genre, list_of_books):
-                    print("\nТакого жанра нет!")
-                    genre = input("\nВыберите жанр: ").strip().capitalize()
-                else:
-                    a2 = False
-            book = input("\nВведите название нового произведения: ").strip().capitalize()
-            for genre_data in list_of_books:
-                if genre in genre_data:
-                    books = genre_data[genre]
-                    for book_data in books:
-                        book_data[0] = book
-                        autor1 = input("Введите автора нового произведения: ")
-                        book_data[1] = autor1
-                        s = True
-                        cost1 = 0
-                        while s:
-                            try:
-                                cost1 = int(input("Введите стоимость нового произведения: "))
-                            except ValueError:
-                                print("\nВведите стоимость, а не текст!")
-                                continue
-                            s = False
-                        book_data[2] = cost1
-                        s = True
-                        rating1 = float(0)
-                        while s:
-                            try:
-                                rating1 = float(input("Введите рейтинг нового произведения: "))
-                            except ValueError:
-                                print("\nВведите рейтинг с плавающей точкой, а не текст!")
-                                continue
-                            s = False
-                        book_data[3] = rating1
-                        break
-                    break
-            for i in list_of_books:
-                print(i)
-                print("---------------------------------------------------------------------------")
-
-        a3 = True
-        yes_or_no_manager = 0
-        while a3:
-            try:
-                yes_or_no_manager = int(input("Хотите продолжить в качестве менеджера? (1 - да, 2 - нет): "))
-                if yes_or_no_manager not in (1, 2):
-                    print("\nТакого ответа нет!")
-                    continue
-                a3 = False
-            except ValueError:
-                print("\nВведите номер ответа, а не текст!")
-        if yes_or_no_manager == 1:
-            Manager(log_and_pass_list_u, log_and_pass_list_m, index1, examination_number, list_of_books)
-        elif yes_or_no_manager == 2:
-            print("\nВы вышли из системы менеджера!")
-            Start()
-            a = False
-
-def User(log_and_pass_list_u, index1, list_of_books):
-    global login, password
-    alphabet = set('абвгдеёжзийклмнопрстуфхцчшщъыьэюя')
-
-    def error_log(login, alphabet):
-        if not alphabet.isdisjoint(login.lower()):
-            raise CustomError("Логин может содержать только латинские буквы, цифры и символы!")
-        if len(login) < 4:
-            raise CustomError("Логин не может быть короче 4 символов!")
-
-    def error_pass(password, alphabet):
-        if not alphabet.isdisjoint(password.lower()):
-            raise CustomError("Пароль может содержать только латинские буквы, цифры и символы!")
-        if len(password) < 4:
-            raise CustomError("Пароль не может быть короче 4 символов!")
-
-    print(log_and_pass_list_u[index1])
-    print("=====================================================")
-    print("\nДобро пожаловать в учетную запись пользователя!")
-    print("\nВыберите действие: ")
-    print("\n0 - ВЫХОД"
-          "\n1 - Каталог товаров"
-          "\n2 - Посмотреть профиль или изменить его"
-          "\n3 - Корзина"
-          "\n4 - Добавить товар в корзину")
-
-    a = True
-    while a:
-        choice_user = input("Номер действия: ")
-        try:
-            error_manager(choice_user)
-            choice_user = int(choice_user)
-        except CustomError as e:
-            print(e)
-            continue
-
-        if choice_user == 0:
-            a = False
-        elif choice_user == 1:
-            print("=====================================================")
-            print("\nВыберите действие: ")
-            print("\n1 - Просмотреть каталог товаров"
-                  "\n2 - Отфильтровать каталог товаров")
-            a2 = True
-            choice_user2 = 0
-            while a2:
-                try:
-                    choice_user2 = int(input("Номер действия: "))
-                except ValueError:
-                    print("\nВведите номер действия, а не текст!")
-                    continue
-
-                if choice_user2 not in (1, 2):
-                    print("\nНеверный номер действия!")
-                    continue
-                a2 = False
-            if choice_user2 == 1:
-                for i in list_of_books:
-                    print(i)
-                    print("---------------------------------------------------------------------------")
-            elif choice_user2 == 2:
-                Filter(list_of_books)
-
-        elif choice_user == 2:
-            print("=====================================================")
-            print("\nВыберите действие: ")
-            print("\n1 - Просмотреть профиль"
-                  "\n2 - Изменить профиль")
-
-            a2 = True
-            choice_user2 = 0
-            while a2:
-                try:
-                    choice_user2 = int(input("Номер действия: "))
-                except ValueError:
-                    print("\nВведите номер действия, а не текст!")
-                    continue
-
-                if choice_user2 not in (1, 2):
-                    print("\nНеверный номер действия!")
-                    continue
-                a2 = False
-
-            if choice_user2 == 1:
-                print(log_and_pass_list_u[index1])
-            elif choice_user2 == 2:
-                print("\nЧто вы хотите изменить: ")
-                print("\n1 - Логин"
-                      "\n2 - Пароль")
-
-                a2 = True
-                ans = 0
-                while a2:
-                    try:
-                        ans = int(input("Введите номер действия: "))
-                    except ValueError:
-                        print("\nВведите номер действия, а не текст!")
-                        continue
-
-                    if ans not in (1, 2):
-                        print("\nТакого действия нет!")
-                        continue
-                    a2 = False
-
-                if ans == 1:
-                    a2 = True
-                    while a2:
-                        login = input("\nВведите новый логин (не менее 4 символов): ")
-                        try:
-                            error_log(login, alphabet)
-                            a2 = False
-                        except CustomError as e:
-                            print(e)
-
-                    log_and_pass_list_u[index1]['login'] = login
-
-                elif ans == 2:
-                    a2 = True
-                    while a2:
-                        password = input("\nВведите новый пароль (не менее 4 символов): ")
-                        try:
-                            error_pass(password, alphabet)
-                            a2 = False
-                        except CustomError as e:
-                            print(e)
-                    log_and_pass_list_u[index1]['password'] = password
-
-        elif choice_user == 3:
-            print("=====================================================")
-            shopping_cart = log_and_pass_list_u[index1].get('shopping cart', [])
-            if not shopping_cart:
-                print("\nКорзина пуста")
-            else:
-                for i in shopping_cart:
-                    print(i)
-
-        elif choice_user == 4:
-            print("=====================================================")
-            for i in list_of_books:
-                print(i)
-                print("---------------------------------------------------------------------------")
-            shopping_cart = add_book(list_of_books, index1, log_and_pass_list_u)
-
-        a3 = True
-        yes_or_no_user = 0
-        while a3:
-            try:
-                yes_or_no_user = int(input("Хотите продолжить в качестве пользователя? (1 - да, 2 - нет): "))
-                if yes_or_no_user not in (1, 2):
-                    print("\nТакого ответа нет!")
-                    continue
-                a3 = False
-            except ValueError:
-                print("\nВведите номер ответа, а не текст!")
-
-        if yes_or_no_user == 1:
-            User(log_and_pass_list_u, index1, list_of_books)
-        elif yes_or_no_user == 2:
-            print("\nВы вышли из системы пользователя!")
-            Start()
-            a = False
 
 print("\nДобро пожаловать в книжный магазин!")
 log_and_pass_list_u = []
